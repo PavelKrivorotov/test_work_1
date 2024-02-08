@@ -5,15 +5,17 @@ from upload.storage import MinioStorage
 
 
 class File(models.Model):
-    # file = models.FileField()
-
+    # Set index on field `file` because make search on this field
+    # for update `processed = True` after put file in Minio.
+    # (Then celery task successed)
     file = models.FileField(
-        storage = MinioStorage
+        storage = MinioStorage,
+        db_index=True,
     )
     uploaded_at = models.DateTimeField(
-        default = now
+        default = now,
     )
     processed = models.BooleanField(
-        default = False
+        default = False,
     )
 

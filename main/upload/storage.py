@@ -1,8 +1,10 @@
 from secrets import token_urlsafe
 
+from django.conf import settings
 from django.core.files.storage import Storage
 
 from minio_storage.client import client
+from upload.tasks import upload, tmp_upload
 
 
 class MinioStorage(Storage):
@@ -15,17 +17,12 @@ class MinioStorage(Storage):
         if not client.bucket_exists(self.bucket_name):
             client.make_bucket(self.bucket_name)
 
-        # 
-        # Add to celary task!
-        # 
-        client.put_object(
-            bucket_name = self.bucket_name,
-            object_name = name,
-            data = content,
-            length=content.size
-        )
-        # 
-        # 
+        if content.size < settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
+            c = content.file.read().hex()
+            upload.apply_async(args=[c, name, content.size, self.bucket_name])
+
+        else:
+            tmp_upload.apply_async(args=[content.file.name, name, self.bucket_name])
 
         return name
     

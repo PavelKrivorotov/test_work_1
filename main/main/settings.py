@@ -137,6 +137,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# MEDIA_ROOT = '' # Worked too
-MEDIA_ROOT = Path(BASE_DIR, 'files')
-MEDIA_URL = '/files/'
+# Celery settings
+CELERY_BROKER_URL = 'amqp://{}:{}@{}:{}'.format(
+    os.getenv('RABBITMQ_USER'),
+    os.getenv('RABBITMQ_PASSWORD'),
+    os.getenv('RABBITMQ_HOST'),
+    os.getenv('RABBITMQ_PORT')
+)
+
+#: Only add pickle to this list if your broker is secured
+#: from unwanted access (see userguide/security.html)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+

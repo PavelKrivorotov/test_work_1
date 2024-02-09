@@ -1,3 +1,4 @@
+import os
 from secrets import token_urlsafe
 
 from django.conf import settings
@@ -34,10 +35,28 @@ class MinioStorage(Storage):
     def exists(self, name: str) -> bool:
         return False
     
-    def url(self, name):
-       return client.get_presigned_url(
+    def url(self, name: str):
+       _url = client.get_presigned_url(
            method = 'GET',
            bucket_name = self.bucket_name,
            object_name = name
         )
+       
+       return self._url_extend(_url)
+
+    def _url_extend(self, url: str):
+        extend = os.getenv('MINIO_EXTEND')
+        
+        if extend.upper() == 'TRUE':
+            old = '{}:{}'.format(
+                os.getenv('MINIO_HOST'),
+                os.getenv('MINIO_PORT')
+            )
+            new = '{}:{}'.format(
+                os.getenv('MINIO_EXTEND_HOST'),
+                os.getenv('MINIO_EXTEND_PORT')
+            )
+            url = url.replace(old, new)
+        
+        return url
 

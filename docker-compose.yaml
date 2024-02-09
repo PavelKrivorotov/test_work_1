@@ -1,0 +1,50 @@
+version: 'v2.17.2'
+
+services:
+  backend:
+    build: .
+    container_name: backend
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    image: postgres:13
+    container_name: database
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=task_06_02_2024
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  minio:
+    image: minio/minio:RELEASE.2022-07-08T00-05-23Z.fips
+    container_name: minio
+    entrypoint: minio server --console-address :9001 /data
+
+  rabbitmq:
+    image: rabbitmq:3.12.11-management-alpine
+    container_name: rabbitmq
+    hostname: rabbitmq
+    
+  nginx:
+    image: nginx:stable
+    container_name: nginx
+    ports:
+      - 8000:8000
+
+      - 9000:9000
+      - 9001:9001
+
+      - 15672:15672
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+      - minio
+      - rabbitmq
+    command: [nginx-debug, '-g', 'daemon off;']

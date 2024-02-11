@@ -18,9 +18,9 @@ COPY ./main /app/main
 ENV host=0.0.0.0
 ENV port=8000
 
-# May be need add two bash files:
-# 1) migrations.sh: run migrations -> (python manage.py run migrations)
-# 2) celery.sh:     run celery -> (celery -A main worker)
+# Copy running bash scripts;
+COPY ./run-django-app.sh /app/run-django-app.sh
+COPY ./run-celery.sh /app/run-celery.sh
 
-# 
-ENTRYPOINT python main/manage.py runserver ${host}:${port}
+RUN chmod +x /app/run-django-app.sh
+RUN chmod +x /app/run-celery.sh

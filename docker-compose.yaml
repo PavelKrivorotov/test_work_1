@@ -3,10 +3,25 @@ version: 'v2.17.2'
 services:
   backend:
     build: .
+    image: backend-app
     container_name: backend
     depends_on:
       database:
         condition: service_healthy
+      minio:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    command: sh /app/run-django-app.sh
+
+  celery:
+    build: .
+    image: backend-celery
+    container_name: celery
+    depends_on:
+      backend:
+        condition: service_started
+    command: sh /app/run-celery.sh
 
   database:
     image: postgres:13
